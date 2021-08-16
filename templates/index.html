@@ -18,49 +18,44 @@
                 <thead class="thead-light">
                   <tr>
                     <th scope="col">Bot</th>
-                    <th scope="col">Function</th>
+{#                    <th scope="col">Function</th>#}
                     <th scope="col">Success</th>
                     <th scope="col">Error</th>
                     <th scope="col">Total</th>
                     <th scope="col">Current</th>
-                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                {% for sender in senders %}
+                {% for bot in bots %}
                   <tr>
                     <th scope="row">
-                      {{ sender.bot.name }}
+                      {{ bot.name }}
                     </th>
-                    <th scope="row">
-                      {{ sender.get_function_display }}
-                    </th>
+{#                    <th scope="row">#}
+{#                      {{ sender.get_function_display }}#}
+{#                    </th>#}
                     <td>
-                      {{ sender.success }}
+                      {{ bot.success }}
                     </td>
                     <td>
-                      {{ sender.error }}
+                      {{ bot.error }}
                     </td>
                     <td>
-                      {{ sender.success|add:sender.error }}
+                      {{ bot.error|add:bot.success }} / {{ bot.total }}
                     </td>
                     <td>
                       <div class="d-flex align-items-center">
-                        <span class="mr-2">60%</span>
+                        <span class="mr-2">{{ bot.current }}%</span>
                         <div>
                           <div class="progress">
-                            <div class="progress-bar bg-gradient-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;"></div>
+                            <div class="progress-bar bg-gradient-danger" role="progressbar" aria-valuenow="{{ bot.current }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ bot.current }}%;"></div>
                           </div>
                         </div>
                       </div>
                     </td>
                     <td>
-                        <form action="/set-status" method="post">
-                            <a id="status" href="javascript:void(0)"><i class="ni ni-button-{% if sender.status %}play{% else %}pause{% endif %}" onclick="this.parentElement.parentElement.submit()"></i></a>
-                            <input type="hidden" name="status" value="{{ sender.status_not }}">
-                            <input type="hidden" name="id" value="{{ sender.pk }}">
-                            {% csrf_token %}
-                        </form>
+                        <a href="/bot/{{ bot.pk }}"><i class="fas fa-eye"></i></a>
                     </td>
                   </tr>
                 {% endfor %}

@@ -1,9 +1,12 @@
 import glob
 import os
 import sqlite3
+import threading
+import time
 
 from pyrogram import Client
 from pyrogram.errors.exceptions.bad_request_400 import InputUserDeactivated, UserIsBlocked
+from pyrogram.client.types import InlineKeyboardMarkup, InlineKeyboardButton
 from .models import Sender, FORWARD, SEND_MESSAGE
 from time import sleep
 from threading import Thread
@@ -26,13 +29,14 @@ def remove_session(sender: Sender):
 
 
 def get_client(sender: Sender):
-    if sender.pk in clients:
-        return clients[sender.pk]
-    client = Client(f'sessions/sender_{sender.pk}', os.getenv('API_ID'), os.getenv('API_HASH'),
+    client_id = sender.pk
+    if client_id in clients:
+        return clients[client_id]
+    client = Client(f'sessions/sender_{client_id}', os.getenv('API_ID'), os.getenv('API_HASH'),
                     bot_token=sender.bot.token)
-    print('Client Starting')
+    print(f'[{client_id}] Client Starting')
     client.start()
-    clients[sender.pk] = client
+    clients[client_id] = client
     return client
 
 
@@ -44,6 +48,9 @@ class Worker:
             self.client = get_client(sender)
         else:
             self.die()
+
+    def admin_id(self):
+        return 268223984
 
     def is_active(self):
         sender = Sender.objects.filter(pk=self.sender.pk).first()
@@ -69,20 +76,30 @@ class Worker:
 
     # Forward 10 message
     def forward(self):
-        text = """Va nihoyat, [gazuz_bot](http://t.me/gazuz_bot) 🔥 Gaz balansini tekshirish botimiz ham ishga tushdi 😊.
-**Do'stlaringizga ulashishni unutmang!** 🗣"""
+        text = """Ikkinchi jaxon urushi nechanchi yilda tugagan? Bu savolga 95% inson xato javob bermoqda. Siz bilasizmi? Bilimingizni sinab ko'ring."""
+        keyboard = [[
+            InlineKeyboardButton('1945-yil 17-may', url='https://t.me/PhotoTarix/219'),
+            InlineKeyboardButton('1945-yil 9-may', url='https://t.me/PhotoTarix/219'),
+        ], [
+            InlineKeyboardButton('1945-yil 3-avgust', url='https://t.me/PhotoTarix/219'),
+            InlineKeyboardButton('1945-yil 2-sentabr', url='https://t.me/PhotoTarix/219'),
+        ]]
+        markup = InlineKeyboardMarkup(keyboard)
         conn = sqlite3.connect(self.sender.bot.db_path)
         cursor = conn.cursor()
-        cursor.execute(f'SELECT id FROM bot_user WHERE id > {self.sender.current_id} AND active ORDER BY id LIMIT 10')
+        cursor.execute(
+            f'SELECT id FROM bot_user WHERE id >= {self.sender.current_id} AND id <= {self.sender.end_id} AND active ORDER BY id LIMIT 10')
         res = cursor.fetchall()
         for cur in res:
-            # sleep(1)
             chat_id = cur[0]
-            self.sender.current_id = chat_id
+            self.sender.current_id = chat_id + 1
             try:
                 # self.client.forward_messages(chat_id, self.sender.value['from_chat_id'],
                 #                              message_ids=self.sender.value['message_id'])
-                self.client.send_message(chat_id, text, parse_mode='Markdown')
+                # self.client.send_message(chat_id, text, reply_markup=markup, parse_mode='Markdown')
+                self.client.send_photo(chat_id, 'https://t.me/PhotoTarix/219', caption=text, reply_markup=markup,
+                                       parse_mode='Markdown')
+
                 self.sender.success += 1
             except (UserIsBlocked, InputUserDeactivated) as e:
                 self.sender.error += 1
@@ -102,7 +119,7 @@ class Worker:
         conn.close()
 
     def start(self):
-        print('Starting Thread')
+        print(f'Starting Thread')
         if self.sender == 0:
             return
         while True:
