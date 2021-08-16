@@ -1,0 +1,91 @@
+{% extends 'header.html' %}
+{% block content %}
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+      <div class="row">
+        <div class="col-xl-12">
+          <div class="card">
+            <div class="card-header border-0">
+              <div class="row align-items-center">
+                <div class="col">
+                  <h3 class="mb-0">Message Senders ({{ bot.name }})</h3>
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <!-- Projects table -->
+              <table class="table align-items-center table-flush">
+                <thead class="thead-light">
+                  <tr>
+                    <th scope="col">Bot</th>
+                    <th scope="col">Function</th>
+                    <th scope="col">Success</th>
+                    <th scope="col">Error</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Current</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for sender in senders %}
+                  <tr>
+                    <th scope="row">
+                      {{ sender.bot.name }}
+                    </th>
+                    <th scope="row">
+                      {{ sender.get_function_display }}
+                    </th>
+                    <td>
+                      {{ sender.success }}
+                    </td>
+                    <td>
+                      {{ sender.error }}
+                    </td>
+                    <td>
+                      {{ sender.success|add:sender.error }} / {{ sender.total }}
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <span class="mr-2">{{ sender.current }}%</span>
+                        <div>
+                          <div class="progress">
+                            <div class="progress-bar bg-gradient-danger" role="progressbar" aria-valuenow="{{ sender.current }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ sender.current }}%;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                        <form action="/set-status" method="post">
+                            <a id="status" href="javascript:void(0)"><i class="ni ni-button-{% if sender.status %}play{% else %}pause{% endif %}" onclick="this.parentElement.parentElement.submit()"></i></a>
+                            <input type="hidden" name="status" value="{{ sender.status_not }}">
+                            <input type="hidden" name="id" value="{{ sender.pk }}">
+                            {% csrf_token %}
+                        </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
+{#{% block script %}#}
+{#    <script>#}
+{#    const pause = 'ni-button-pause'#}
+{#    const play = 'ni-button-play'#}
+{#    $('#status > i').click(function (){#}
+{#        $(this).form.submit()#}
+{#        if ($(this).hasClass(pause)){#}
+{#            $(this).removeClass(pause)#}
+{#            $(this).addClass(play)#}
+{#        }#}
+{#        else{#}
+{#            $(this).removeClass(play)#}
+{#            $(this).addClass(pause)#}
+{#        }#}
+{#    })#}
+{#    </script>#}
+{#{% endblock %}#}
