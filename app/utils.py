@@ -26,7 +26,7 @@ def get_10_users(sender: Sender):
 
 def bot_users_count(bot: Bot):
     cursor = create_cursor(bot)
-    cursor.execute(f'SELECT count(*) FROM bot_user')
+    cursor.execute(f'SELECT count(*) FROM bot_user WHERE active')
     res = cursor.fetchone()
     cursor.close()
     return res[0]
