@@ -1,0 +1,15 @@
+
+version: "3"
+
+services:
+  sender:
+    image: sender
+    container_name: sender
+    build: ./
+    restart: always
+    volumes:
+      - ./:/app
+networks:
+  default:
+    external:
+      name: nginx-proxy
