@@ -14,6 +14,7 @@ from time import sleep
 from threading import Thread
 from dotenv import load_dotenv
 from requests import post
+from django.conf import settings
 
 from .utils import get_10_users
 
@@ -23,7 +24,7 @@ clients = {}
 
 
 def remove_session(sender: Sender):
-    fileList = glob.glob(f'sessions/sender_{sender.pk}*')
+    fileList = glob.glob(f'{settings.BASE_DIR}/sessions/sender_{sender.pk}*')
     # Iterate over the list of filepaths & remove each file.
     for filePath in fileList:
         try:
@@ -36,7 +37,7 @@ def get_client(sender: Sender):
     client_id = sender.pk
     if client_id in clients:
         return clients[client_id]
-    client = Client(f'sessions/sender_{client_id}', os.getenv('API_ID'), os.getenv('API_HASH'),
+    client = Client(f'{settings.BASE_DIR}/sessions/sender_{client_id}', os.getenv('API_ID'), os.getenv('API_HASH'),
                     bot_token=sender.bot.token)
     print(f'[{client_id}] Client Starting')
     client.start()
