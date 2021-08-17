@@ -7,11 +7,15 @@ import time
 from pyrogram import Client
 from pyrogram.errors.exceptions.bad_request_400 import InputUserDeactivated, UserIsBlocked
 from pyrogram.client.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+from .messages import rec
 from .models import Sender, FORWARD, SEND_MESSAGE
 from time import sleep
 from threading import Thread
 from dotenv import load_dotenv
 from requests import post
+
+from .utils import get_10_users
 
 load_dotenv()
 
@@ -49,9 +53,6 @@ class Worker:
         else:
             self.die()
 
-    def admin_id(self):
-        return 268223984
-
     def is_active(self):
         sender = Sender.objects.filter(pk=self.sender.pk).first()
         if sender and sender.status == 1:
@@ -76,30 +77,12 @@ class Worker:
 
     # Forward 10 message
     def forward(self):
-        text = """Ikkinchi jaxon urushi nechanchi yilda tugagan? Bu savolga 95% inson xato javob bermoqda. Siz bilasizmi? Bilimingizni sinab ko'ring."""
-        keyboard = [[
-            InlineKeyboardButton('1945-yil 17-may', url='https://t.me/PhotoTarix/219'),
-            InlineKeyboardButton('1945-yil 9-may', url='https://t.me/PhotoTarix/219'),
-        ], [
-            InlineKeyboardButton('1945-yil 3-avgust', url='https://t.me/PhotoTarix/219'),
-            InlineKeyboardButton('1945-yil 2-sentabr', url='https://t.me/PhotoTarix/219'),
-        ]]
-        markup = InlineKeyboardMarkup(keyboard)
-        conn = sqlite3.connect(self.sender.bot.db_path)
-        cursor = conn.cursor()
-        cursor.execute(
-            f'SELECT id FROM bot_user WHERE id >= {self.sender.current_id} AND id <= {self.sender.end_id} AND active ORDER BY id LIMIT 10')
-        res = cursor.fetchall()
+        res = get_10_users(self.sender)
         for cur in res:
             chat_id = cur[0]
             self.sender.current_id = chat_id + 1
             try:
-                # self.client.forward_messages(chat_id, self.sender.value['from_chat_id'],
-                #                              message_ids=self.sender.value['message_id'])
-                # self.client.send_message(chat_id, text, reply_markup=markup, parse_mode='Markdown')
-                self.client.send_photo(chat_id, 'https://t.me/PhotoTarix/219', caption=text, reply_markup=markup,
-                                       parse_mode='Markdown')
-
+                rec(self.client, chat_id)
                 self.sender.success += 1
             except (UserIsBlocked, InputUserDeactivated) as e:
                 self.sender.error += 1
@@ -116,7 +99,6 @@ class Worker:
             self.sender.save()
         else:
             self.sender.save(update_fields=['success', 'error', 'current_id'])
-        conn.close()
 
     def start(self):
         print(f'Starting Thread')

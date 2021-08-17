@@ -1,12 +1,27 @@
 import sqlite3
 
-from .models import Bot
+from .models import Bot, Sender
+
+
+def admin_id():
+    # return 732918719
+    return 268223984
 
 
 def create_cursor(bot: Bot):
     conn = sqlite3.connect(bot.db_path)
     cursor = conn.cursor()
     return cursor
+
+
+def get_10_users(sender: Sender):
+    conn = sqlite3.connect(sender.bot.db_path)
+    cursor = conn.cursor()
+    cursor.execute(
+        f'SELECT id FROM bot_user WHERE id >= {sender.current_id} AND id <= {sender.end_id} AND active ORDER BY id LIMIT 10')
+    res = cursor.fetchall()
+    cursor.close()
+    return res
 
 
 def bot_users_count(bot: Bot):
